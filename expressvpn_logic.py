@@ -1,7 +1,6 @@
-import csv
 import subprocess
-import requests
-import tqdm
+import random
+from typing import List
 
 VPN_CONNECT = 'expressvpn connect'
 
@@ -109,68 +108,33 @@ def extract_aliases(vpn_list):
     return aliases
 
 
-def get_all_vpn_locations():
+class VpnList:
     """
-    extracts all the available vpn servers
+    represents a vpn servers' locations for the user
     """
+    # static constructor (anything in the class definition will be executed once):
     vpn_list = run_command(VPN_LIST)
-    locations = extract_aliases(vpn_list)
+    _all_locations = extract_aliases(vpn_list)
+    _alias_to_country_dct = {k: v for (k, v) in _all_locations}
 
-    for location in locations:
-        yield location
+    def __init__(self, location_aliases_list: List[str] = None,
+                 random_locations_amount: int = None) -> None:
+        super().__init__()
 
+        if location_aliases_list is not None:
+            self._locations_for_user = [(alias, self._alias_to_country_dct[alias]) for alias in location_aliases_list]
 
-def get_vpn_locations(location_aliases_list):
-    """
-    retrieves list of vpn servers in one of 3 ways:
-    1.user's specific locations
-    2.all the vpn locations
-    3.TODO random locations (in case the user specified only the amount of locations)
-    :param location_aliases_list: list of user's locations
-    :return: generator of vpn servers' locations
-    """
-    if location_aliases_list:
-        for location_alias in location_aliases_list:
-            yield location_alias, ""
-    else:
-        for location in get_all_vpn_locations():
-            yield location
+        elif random_locations_amount is not None:
+            all_locations_copy = self._all_locations[:]
+            random.shuffle(all_locations_copy)
+            self._locations_for_user = all_locations_copy[:random_locations_amount]
 
+        else:
+            self._locations_for_user = self._all_locations[:]
 
-def launch_globe_curl(url, requests_per_location=1, location_aliases_list=None):
+    def get_locations_amount(self):
+        return len(self._locations_for_user)
 
-    csv_headers = ["request number", "ip", "response"]
-    results = []
-    if location_aliases_list is None:
-        location_aliases_list = []
-    # TODO:
-    # handle exceptions
-    # add csv command line args
-    # add headers extraction mechanism
-
-    total_request_idx = 0
-    # TODO: add total argument to tqdm
-    for (alias, country) in tqdm.tqdm(get_vpn_locations(location_aliases_list)):
-        disconnect()
-
-        # print('Connecting to : {}({})'.format(country, alias))
-        connect_alias(alias)  # might raise a ConnectException.
-
-        for same_request_idx in range(requests_per_location):
-            total_request_idx += 1
-            myip_check = requests.get("https://myip.wtf/json")
-            myip_content = myip_check.text
-
-            url_res = requests.get(url, allow_redirects=False)
-            url_res_content = url_res.text
-
-            request_info = [total_request_idx, myip_content, url_res_content]
-            results.append(request_info)
-
-    with open("out.csv", "w") as f:
-        csv_writer = csv.writer(f)
-
-        csv_writer.writerow(csv_headers)
-        csv_writer.writerows(results)
-
-
+    def get_locations(self):
+        for alias, country in self._locations_for_user:
+            yield alias, country
