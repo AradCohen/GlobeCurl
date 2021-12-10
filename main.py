@@ -11,12 +11,14 @@ def parse_arguments():
                         action="store", default=1)
     parser.add_argument("-l", "--locations-aliases", help="aliases of server to use", action="append")
     parser.add_argument("-r", "--random_locations_amount", help="amount of random vpn server to connect to", type=int)
+    parser.add_argument("-H", "--headers", help="focus on specific header in the response", action="append")
     args = parser.parse_args()
     return args
 
 
 def print_cool_ascii():
     pyfiglet.print_figlet("GlobeCurl")
+    print("Welcome to GlobeCurl - the tool that let you launch requests from around the world using expressvpn!")
 
 
 def main():
@@ -32,7 +34,8 @@ def main():
     launch_globe_curl(cmd_args_dict["url"],
                       requests_per_location=cmd_args_dict["number_of_requests_per_location"],
                       location_aliases_list=cmd_args_dict["locations_aliases"],
-                      random_locations_amount=cmd_args_dict["random_locations_amount"])
+                      random_locations_amount=cmd_args_dict["random_locations_amount"],
+                      response_headers=cmd_args_dict["headers"])
 
 
 if __name__ == '__main__':
