@@ -1,6 +1,6 @@
 # GlobeCurl
 
-GlobeCurl lets you run curl from around the globe with expressvpn
+GlobeCurl lets you run curl from different locations with expressvpn
 
 ## Examples:
 Running GlobeCurl from 5 random locations:
